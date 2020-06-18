@@ -1,0 +1,63 @@
+cat << EOF > /tmp/httpsink-avro.json
+{
+  "name": "HttpSink-Avro",
+  "config": {
+    "topics": "persons-avro-test",
+    "tasks.max": "1",
+    "connector.class": "io.confluent.connect.http.HttpSinkConnector",
+    "http.api.url": "http://192.168.29.136:3344/receiveData",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "header.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.schema.registry.url": "http://192.168.29.215:8081",
+    "key.converter.schema.registry.url": "http://192.168.29.215:8081",
+    "confluent.topic.bootstrap.servers": "cp-helm-charts-1592202741-cp-kafka-headless:9092",
+    "confluent.topic.replication.factor": "1",
+    "reporter.bootstrap.servers": "cp-helm-charts-1592202741-cp-kafka-headless:9092",
+    "reporter.error.topic.replication.factor": "1",
+    "reporter.result.topic.replication.factor": "1"
+  }
+}
+EOF
+
+  kafka-avro-console-producer \
+         --broker-list cp-helm-charts-1592202741-cp-kafka-headless:9092 --topic persons-avro-test \
+         --property schema.registry.url=http://192.168.29.215:8081 \
+         --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+         
+         
+  curl -k http://192.168.29.213:8083/connectors
+
+
+  curl -k -X POST -d @httpsink.json http://192.168.29.213:8083/connectors --header "content-Type:application/json"
+
+
+cat << EOF > /tmp/httpsink.json
+{
+  "name": "HttpSink",
+  "config": {
+    "topics": "testAlertsSSE",
+    "tasks.max": "1",
+    "connector.class": "io.confluent.connect.http.HttpSinkConnector",
+    "http.api.url": "http://192.168.29.136:3344/receiveData",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "header.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "confluent.topic.bootstrap.servers": "cp-helm-charts-1592202741-cp-kafka-headless:9092",
+    "confluent.topic.replication.factor": "1",
+    "reporter.bootstrap.servers": "cp-helm-charts-1592202741-cp-kafka-headless:9092",
+    "reporter.error.topic.replication.factor": "1",
+    "reporter.result.topic.replication.factor": "1"
+  }
+}
+EOF
+
+kafka-topics --zookeeper cp-helm-charts-1592202741-cp-zookeeper-headless:2181 \
+--topic testAlertsSSE --create --partitions 1 --replication-factor 1 --if-not-exists
+
+
+ echo "this is http-sink" | kafka-console-producer --broker-list cp-helm-charts-1592202741-cp-kafka-headless:9092 \
+ --topic testAlertsSSE
+ 
+ Useful like:
+ https://feitam.es/kafka-connect-http-sink-first-steps-installation-configuration-errors-monitoring/
