@@ -16,7 +16,6 @@ cat << EOF > /tmp/httpsink-avro.json
     "reporter.bootstrap.servers": "cp-helm-charts-1592202741-cp-kafka-headless:9092",
     "reporter.error.topic.replication.factor": "1",
     "reporter.result.topic.replication.factor": "1"
-    "payment": 2
   }
 }
 EOF
